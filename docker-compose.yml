@@ -31,6 +31,8 @@ services:
       FACEBOOK_APP_ID: "${FACEBOOK_APP_ID:-}"
       FACEBOOK_APP_SECRET: "${FACEBOOK_APP_SECRET:-}"
       HUGGING_FACE_API_KEY: "${HUGGING_FACE_API_KEY:-}"
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
     volumes:
       - uploads_data:/app/uploads
 

@@ -68,9 +68,18 @@ export interface UpdatePostBody {
   status?: "draft" | "scheduled";
 }
 
+export type ImageProvider = "pollinations" | "huggingface" | "openai" | "gemini";
+
 export interface GenerateImageBody {
   prompt: string;
   style?: string | null;
+  provider?: ImageProvider;
+  model?: string | null;
+}
+
+export interface UploadFileResponse {
+  url: string;
+  filename: string;
 }
 
 export interface GeneratedImage {
@@ -452,6 +461,26 @@ export const usePublishPost = <TError = ErrorType<ErrorResponse>, TContext = unk
 ): UseMutationResult<Awaited<ReturnType<typeof publishPost>>, TError, { id: number }, TContext> => {
   const mutationFn: MutationFunction<Awaited<ReturnType<typeof publishPost>>, { id: number }> = ({ id }) =>
     publishPost(id, options?.request);
+  return useMutation({ mutationFn, ...options?.mutation });
+};
+
+// ─── Uploads ──────────────────────────────────────────────────────────────────
+
+export const uploadFile = async (file: File): Promise<UploadFileResponse> => {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch("/api/uploads", { method: "POST", body: form });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText })) as { error: string };
+    throw new Error(err.error ?? `Upload failed: ${res.status}`);
+  }
+  return res.json() as Promise<UploadFileResponse>;
+};
+
+export const useUploadFile = <TError = ErrorType<ErrorResponse>, TContext = unknown>(
+  options?: { mutation?: UseMutationOptions<UploadFileResponse, TError, { file: File }, TContext> }
+): UseMutationResult<UploadFileResponse, TError, { file: File }, TContext> => {
+  const mutationFn: MutationFunction<UploadFileResponse, { file: File }> = ({ file }) => uploadFile(file);
   return useMutation({ mutationFn, ...options?.mutation });
 };
 

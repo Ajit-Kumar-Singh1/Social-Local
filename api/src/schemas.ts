@@ -68,4 +68,6 @@ export const PublishPostParams = zod.object({
 export const GenerateImageBody = zod.object({
   prompt: zod.string().describe("Text prompt to generate an image from"),
   style: zod.string().nullish().describe("Style hint e.g. photorealistic, cartoon, watercolor"),
+  provider: zod.enum(["pollinations", "huggingface", "openai", "gemini"]).optional().default("pollinations"),
+  model: zod.string().nullish().describe("Optional model override for the selected provider"),
 });
