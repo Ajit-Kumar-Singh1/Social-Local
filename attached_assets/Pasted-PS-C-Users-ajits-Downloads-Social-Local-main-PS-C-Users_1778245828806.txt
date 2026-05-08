@@ -1,0 +1,397 @@
+PS C:\Users\ajits\Downloads\Social-Local-main> 
+PS C:\Users\ajits\Downloads\Social-Local-main> 
+PS C:\Users\ajits\Downloads\Social-Local-main> netstat -ano | findstr :80
+  TCP    0.0.0.0:80             0.0.0.0:0              LISTENING       4
+  TCP    [::]:80                [::]:0                 LISTENING       4
+PS C:\Users\ajits\Downloads\Social-Local-main> tasklist | findstr 80  
+Registry                       280 Services                   0     46,448 K
+winlogon.exe                  1380 Console                    1      3,364 K
+WUDFHost.exe                  2080 Services                   0      9,736 K
+svchost.exe                   3476 Services                   0      2,580 K
+AnyDesk.exe                   4680 Services                   0      3,136 K
+OfficeClickToRun.exe          4732 Services                   0     27,808 K
+IntelAudioService.exe         4808 Services                   0      2,316 K
+MpDefenderCoreService.exe     5084 Services                   0     12,800 K
+pg_ctl.exe                    5280 Services                   0        632 K
+MsMpEng.exe                   5380 Services                   0   3,84,912 K
+postgres.exe                  8180 Services                   0        628 K
+GoogleInputHandler.exe        9680 Console                    1      2,268 K
+svchost.exe                   9804 Console                    1     21,260 K
+svchost.exe                  10556 Services                   0     18,180 K
+gamingservicesnet.exe        11020 Services                   0      4,800 K
+IntelGraphicsSoftware.Ser    11040 Services                   0      6,880 K
+svchost.exe                  10800 Services                   0     12,220 K
+CrossDeviceResume.exe        11680 Console                    1      9,180 K
+CrossDeviceService.exe       12804 Console                    1     22,828 K
+msedgewebview2.exe           14380 Console                    1     15,948 K
+chrome.exe                    8084 Console                    1     16,104 K
+ms-teams.exe                 18776 Console                    1     21,980 K
+msedgewebview2.exe            4408 Console                    1     14,800 K
+PAD.AutomationServer.exe     20280 Console                    1     26,868 K
+msedgewebview2.exe           19692 Console                    1      5,080 K
+CCXProcess.exe               17880 Console                    1        520 K
+svchost.exe                  18016 Services                   0      1,192 K
+AdobeIPCBroker.exe           21428 Console                    1      1,800 K
+conhost.exe                   6992 Services                   0        808 K
+Dell.DCF.UA.Bradbury.API.    10908 Services                   0     13,580 K
+svchost.exe                  13804 Services                   0      6,728 K
+ApplicationFrameHost.exe     20936 Console                    1      6,480 K
+WidgetService.exe            22440 Console                    1      3,280 K
+FileCoAuth.exe               26800 Console                    1     15,576 K
+svchost.exe                  18056 Services                   0      2,760 K
+EXCEL.EXE                    11736 Console                    1     43,180 K
+uihost.exe                   17604 Console                    1     20,280 K
+dllhost.exe                  25096 Console                    1      3,280 K
+vmcompute.exe                26380 Services                   0      3,048 K
+Docker Desktop.exe           23328 Console                    1      6,980 K
+vmwp.exe                     26808 Services                   0      8,724 K
+dllhost.exe                  25080 Console                    1      1,464 K
+wsl.exe                      30780 Console                    1        576 K
+wsl.exe                      30808 Console                    1        668 K
+conhost.exe                  31180 Console                    1      2,280 K
+wslhost.exe                  31280 Console                    1      1,224 K
+RuntimeBroker.exe            32680 Console                    1     16,620 K
+msedge.exe                   33140 Console                    1      7,880 K
+msedge.exe                   32200 Console                    1     10,980 K
+Code.exe                     33080 Console                    1   2,86,984 K
+powershell.exe               16968 Console                    1     85,880 K
+WmiApSrv.exe                 33380 Services                   0     12,176 K
+PS C:\Users\ajits\Downloads\Social-Local-main> docker compose run api npm run db:push
+[+] Creating 2/2
+ ✔ Network social-local-main_default       Created                                                                                                         0.0s 
+ ✔ Container social-local-main-postgres-1  Created                                                                                                         0.2s 
+[+] Running 1/1
+ ✔ Container social-local-main-postgres-1  Started                                                                                                         0.3s 
+
+> social-local-api@1.0.0 db:push
+> drizzle-kit push
+
+sh: drizzle-kit: not found
+
+PS C:\Users\ajits\Downloads\Social-Local-main> docker compose run api npm run migrate
+time="2026-05-08T18:28:46+05:30" level=warning msg="Found orphan containers ([social-local-main-api-run-599b3f2d9305]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+[+] Creating 1/1
+ ✔ Container social-local-main-postgres-1  Running                                                                                                         0.0s 
+npm error Missing script: "migrate"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run
+npm error A complete log of this run can be found in: /root/.npm/_logs/2026-05-08T12_58_47_258Z-debug-0.log
+
+PS C:\Users\ajits\Downloads\Social-Local-main> docker compose run api npm run db:migrate
+time="2026-05-08T18:28:59+05:30" level=warning msg="Found orphan containers ([social-local-main-api-run-ee006a8c4851 social-local-main-api-run-599b3f2d9305]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up."
+[+] Creating 1/1
+ ✔ Container social-local-main-postgres-1  Running                                                                                                         0.0s 
+npm error Missing script: "db:migrate"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run
+npm error A complete log of this run can be found in: /root/.npm/_logs/2026-05-08T12_59_00_382Z-debug-0.log
+
+PS C:\Users\ajits\Downloads\Social-Local-main> npm install --omit=dev
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm.
+
+> workspace@0.0.0 preinstall
+> sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+
+'sh' is not recognized as an internal or external command,
+operable program or batch file.
+npm error code 1
+npm error path C:\Users\ajits\Downloads\Social-Local-main
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+npm error A complete log of this run can be found in: C:\Users\ajits\AppData\Local\npm-cache\_logs\2026-05-08T12_59_40_379Z-debug-0.log
+PS C:\Users\ajits\Downloads\Social-Local-main> npm install
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm.
+
+> workspace@0.0.0 preinstall
+> sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+
+'sh' is not recognized as an internal or external command,
+operable program or batch file.
+npm error code 1
+npm error path C:\Users\ajits\Downloads\Social-Local-main
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+npm error A complete log of this run can be found in: C:\Users\ajits\AppData\Local\npm-cache\_logs\2026-05-08T12_59_58_076Z-debug-0.log
+PS C:\Users\ajits\Downloads\Social-Local-main> npm install -g pnpm
+
+changed 1 package in 3s
+
+1 package is looking for funding
+  run `npm fund` for details
+PS C:\Users\ajits\Downloads\Social-Local-main> pnpm install
+Scope: all 9 workspace projects
+Lockfile is up to date, resolution step is skipped
+Packages: +496
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 496, reused 496, downloaded 0, added 496, done
+
+devDependencies:
++ prettier 3.8.1
++ typescript 5.9.3
+
+. preinstall$ sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+│ 'sh' is not recognized as an internal or external command,
+│ operable program or batch file.
+└─ Failed in 66ms at C:\Users\ajits\Downloads\Social-Local-main
+[ELIFECYCLE] Command failed with exit code 1.
+PS C:\Users\ajits\Downloads\Social-Local-main> pnpm install --ignore-scripts
+Scope: all 9 workspace projects
+Lockfile is up to date, resolution step is skipped
+Already up to date
+Done in 997ms using pnpm v11.0.8
+PS C:\Users\ajits\Downloads\Social-Local-main> pnpm run db:push
+[ERR_PNPM_NO_SCRIPT] Missing script: db:push
+
+Command "db:push" not found.
+PS C:\Users\ajits\Downloads\Social-Local-main> pnpm run
+Lifecycle scripts:
+  preinstall
+    sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+
+Commands available via "pnpm run":
+  build
+    pnpm run typecheck && pnpm -r --if-present run build
+  typecheck:libs
+    tsc --build
+  typecheck
+    pnpm run typecheck:libs && pnpm -r --filter "./artifacts/**" --filter "./scripts" --if-present run typecheck
+PS C:\Users\ajits\Downloads\Social-Local-main> 
+PS C:\Users\ajits\Downloads\Social-Local-main> 
+PS C:\Users\ajits\Downloads\Social-Local-main> 
+PS C:\Users\ajits\Downloads\Social-Local-main> 
+PS C:\Users\ajits\Downloads\Social-Local-main> 
+PS C:\Users\ajits\Downloads\Social-Local-main> pnpm run
+Lifecycle scripts:
+  preinstall
+    sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+
+Commands available via "pnpm run":
+  build
+    pnpm run typecheck && pnpm -r --if-present run build
+  typecheck:libs
+    tsc --build
+  typecheck
+    pnpm run typecheck:libs && pnpm -r --filter "./artifacts/**" --filter "./scripts" --if-present run typecheck
+PS C:\Users\ajits\Downloads\Social-Local-main> PS C:\Users\ajits\Downloads\Social-Local-main> pnpm run
+Get-Process : A positional parameter cannot be found that accepts argument 'pnpm'.
+At line:1 char:1
++ PS C:\Users\ajits\Downloads\Social-Local-main> pnpm run
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidArgument: (:) [Get-Process], ParameterBindingException
+    + FullyQualifiedErrorId : PositionalParameterNotFound,Microsoft.PowerShell.Commands.GetProcessCommand
+ 
+PS C:\Users\ajits\Downloads\Social-Local-main> Lifecycle scripts:
+Lifecycle : The term 'Lifecycle' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if 
+a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ Lifecycle scripts:
++ ~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (Lifecycle:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+PS C:\Users\ajits\Downloads\Social-Local-main>   preinstall
+preinstall : The term 'preinstall' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or 
+if a path was included, verify that the path is correct and try again.
+At line:1 char:3
++   preinstall
++   ~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (preinstall:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+PS C:\Users\ajits\Downloads\Social-Local-main>     sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+sh : The term 'sh' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was 
+included, verify that the path is correct and try again.
+At line:1 char:5
++     sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_ ...
++     ~~
+    + CategoryInfo          : ObjectNotFound: (sh:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+PS C:\Users\ajits\Downloads\Social-Local-main> 
+PS C:\Users\ajits\Downloads\Social-Local-main> Commands available via "pnpm run":
+Commands : The term 'Commands' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a 
+path was included, verify that the path is correct and try again.
+At line:1 char:1
++ Commands available via "pnpm run":
++ ~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (Commands:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+PS C:\Users\ajits\Downloads\Social-Local-main>   build
+build : The term 'build' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path 
+was included, verify that the path is correct and try again.
+At line:1 char:3
++   build
++   ~~~~~
+    + CategoryInfo          : ObjectNotFound: (build:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+PS C:\Users\ajits\Downloads\Social-Local-main>     pnpm run typecheck && pnpm -r --if-present run build
+At line:1 char:24
++     pnpm run typecheck && pnpm -r --if-present run build
++                        ~~
+The token '&&' is not a valid statement separator in this version.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : InvalidEndOfLine
+ 
+PS C:\Users\ajits\Downloads\Social-Local-main>   typecheck:libs
+typecheck:libs : The term 'typecheck:libs' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the 
+name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:3
++   typecheck:libs
++   ~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (typecheck:libs:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+PS C:\Users\ajits\Downloads\Social-Local-main>     tsc --build
+tsc : The term 'tsc' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was 
+included, verify that the path is correct and try again.
+At line:1 char:5
++     tsc --build
++     ~~~
+    + CategoryInfo          : ObjectNotFound: (tsc:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+PS C:\Users\ajits\Downloads\Social-Local-main>   typecheck
+typecheck : The term 'typecheck' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if 
+a path was included, verify that the path is correct and try again.
+At line:1 char:3
++   typecheck
++   ~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (typecheck:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+PS C:\Users\ajits\Downloads\Social-Local-main>     pnpm run typecheck:libs && pnpm -r --filter "./artifacts/**" --filter "./scripts" --if-present run typecheck
+At line:1 char:29
++     pnpm run typecheck:libs && pnpm -r --filter "./artifacts/**" --fi ...
++                             ~~
+The token '&&' is not a valid statement separator in this version.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : InvalidEndOfLine
+ 
+PS C:\Users\ajits\Downloads\Social-Local-main> pnpm run                                       
+Lifecycle scripts:
+  preinstall
+    sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+
+Commands available via "pnpm run":
+  build
+    pnpm run typecheck && pnpm -r --if-present run build
+  typecheck:libs
+    tsc --build
+  typecheck
+    pnpm run typecheck:libs && pnpm -r --filter "./artifacts/**" --filter "./scripts" --if-present run typecheck
+PS C:\Users\ajits\Downloads\Social-Local-main> PS C:\Users\ajits\Downloads\Social-Local-main> pnpm run                                       
+Get-Process : A positional parameter cannot be found that accepts argument 'pnpm'.
+At line:1 char:1
++ PS C:\Users\ajits\Downloads\Social-Local-main> pnpm run
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidArgument: (:) [Get-Process], ParameterBindingException
+    + FullyQualifiedErrorId : PositionalParameterNotFound,Microsoft.PowerShell.Commands.GetProcessCommand
+ 
+PS C:\Users\ajits\Downloads\Social-Local-main> Lifecycle scripts:
+Lifecycle : The term 'Lifecycle' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if 
+a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ Lifecycle scripts:
++ ~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (Lifecycle:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+PS C:\Users\ajits\Downloads\Social-Local-main>   preinstall
+preinstall : The term 'preinstall' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or 
+if a path was included, verify that the path is correct and try again.
+At line:1 char:3
++   preinstall
++   ~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (preinstall:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+PS C:\Users\ajits\Downloads\Social-Local-main>     sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+sh : The term 'sh' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was 
+included, verify that the path is correct and try again.
+At line:1 char:5
++     sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_ ...
++     ~~
+    + CategoryInfo          : ObjectNotFound: (sh:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+PS C:\Users\ajits\Downloads\Social-Local-main> 
+PS C:\Users\ajits\Downloads\Social-Local-main> Commands available via "pnpm run":
+Commands : The term 'Commands' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a 
+path was included, verify that the path is correct and try again.
+At line:1 char:1
++ Commands available via "pnpm run":
++ ~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (Commands:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+PS C:\Users\ajits\Downloads\Social-Local-main>   build
+build : The term 'build' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path 
+was included, verify that the path is correct and try again.
+At line:1 char:3
++   build
++   ~~~~~
+    + CategoryInfo          : ObjectNotFound: (build:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+PS C:\Users\ajits\Downloads\Social-Local-main>     pnpm run typecheck && pnpm -r --if-present run build
+At line:1 char:24
++     pnpm run typecheck && pnpm -r --if-present run build
++                        ~~
+The token '&&' is not a valid statement separator in this version.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : InvalidEndOfLine
+ 
+PS C:\Users\ajits\Downloads\Social-Local-main>   typecheck:libs
+typecheck:libs : The term 'typecheck:libs' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the 
+name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:3
++   typecheck:libs
++   ~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (typecheck:libs:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+PS C:\Users\ajits\Downloads\Social-Local-main>     tsc --build
+tsc : The term 'tsc' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was 
+included, verify that the path is correct and try again.
+At line:1 char:5
++     tsc --build
++     ~~~
+    + CategoryInfo          : ObjectNotFound: (tsc:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+PS C:\Users\ajits\Downloads\Social-Local-main>   typecheck
+typecheck : The term 'typecheck' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if 
+a path was included, verify that the path is correct and try again.
+At line:1 char:3
++   typecheck
++   ~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (typecheck:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+PS C:\Users\ajits\Downloads\Social-Local-main>     pnpm run typecheck:libs && pnpm -r --filter "./artifacts/**" --filter "./scripts" --if-present run typecheck
+At line:1 char:29
++     pnpm run typecheck:libs && pnpm -r --filter "./artifacts/**" --fi ...
++                             ~~
+The token '&&' is not a valid statement separator in this version.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : InvalidEndOfLine
+ 
+PS C:\Users\ajits\Downloads\Social-Local-main> pnpm run                                       
+Lifecycle scripts:
+  preinstall
+    sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+
+Commands available via "pnpm run":
+  build
+    pnpm run typecheck && pnpm -r --if-present run build
+  typecheck:libs
+    tsc --build
+  typecheck
+    pnpm run typecheck:libs && pnpm -r --filter "./artifacts/**" --filter "./scripts" --if-present run typecheck
+PS C:\Users\ajits\Downloads\Social-Local-main> 

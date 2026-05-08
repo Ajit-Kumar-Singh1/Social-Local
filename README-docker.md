@@ -30,8 +30,8 @@ Edit `.env` and fill in your Facebook App credentials:
 ```
 FACEBOOK_APP_ID=your_app_id
 FACEBOOK_APP_SECRET=your_app_secret
-APP_URL=http://localhost
-PUBLIC_URL=http://localhost
+APP_URL=http://localhost:8080
+PUBLIC_URL=http://localhost:8080
 ```
 
 ### 2. Build and start
@@ -41,21 +41,15 @@ docker compose up --build
 ```
 
 This starts three services:
-- **postgres** — PostgreSQL database
-- **api** — Express API server (internal port 5000, not exposed)
-- **frontend** — React app served by nginx (port 80)
+- **postgres** — PostgreSQL database (internal only)
+- **api** — Express API server (internal port 5000, not exposed to host)
+- **frontend** — React app served by nginx (host port **8080**)
 
-### 3. Initialize the database
+### 3. Open the app
 
-On first run, apply the schema:
+Visit **[http://localhost:8080](http://localhost:8080)** in your browser.
 
-```bash
-docker compose exec api npx drizzle-kit push
-```
-
-### 4. Open the app
-
-Visit **[http://localhost](http://localhost)** in your browser.
+> The database tables are created automatically on first startup — no manual migration step needed.
 
 ---
 
@@ -64,7 +58,7 @@ Visit **[http://localhost](http://localhost)** in your browser.
 In your Facebook Developer App settings → Facebook Login → Valid OAuth redirect URIs, add:
 
 ```
-http://localhost/api/auth/facebook/callback
+http://localhost:8080/api/auth/facebook/callback
 ```
 
 Then go to the **Pages** section in the app and click **Connect with Facebook**.
@@ -73,11 +67,11 @@ Then go to the **Pages** section in the app and click **Connect with Facebook**.
 
 ## Services
 
-| Service  | URL                  | Purpose              |
-|----------|----------------------|----------------------|
-| Frontend | http://localhost     | React UI (nginx)     |
-| API      | http://localhost/api | Proxied by nginx     |
-| Database | internal only        | PostgreSQL           |
+| Service  | URL                       | Purpose              |
+|----------|---------------------------|----------------------|
+| Frontend | http://localhost:8080     | React UI (nginx)     |
+| API      | http://localhost:8080/api | Proxied by nginx     |
+| Database | internal only             | PostgreSQL           |
 
 ---
 
@@ -91,21 +85,21 @@ docker compose down -v       # Stop and delete all data (database + uploads)
 ## Upgrading
 
 ```bash
-docker compose pull
 docker compose up --build -d
-docker compose exec api npx drizzle-kit push   # run if schema changed
 ```
+
+> Database schema changes are applied automatically on startup.
 
 ---
 
 ## Environment Variables Reference
 
-| Variable              | Required | Default          | Description                                           |
-|-----------------------|----------|------------------|-------------------------------------------------------|
-| `POSTGRES_PASSWORD`   | No       | `sociallocal`    | PostgreSQL password                                   |
-| `FACEBOOK_APP_ID`     | Yes      | —                | Facebook Developer App ID                             |
-| `FACEBOOK_APP_SECRET` | Yes      | —                | Facebook Developer App Secret                         |
-| `APP_URL`             | Yes      | `http://localhost`| Base URL for OAuth callbacks                         |
-| `PUBLIC_URL`          | No       | `http://localhost`| Base URL for uploaded file URLs                      |
-| `PORT`                | No       | `80`             | Host port for the frontend                            |
-| `HUGGING_FACE_API_KEY`| No       | —                | HuggingFace key for AI image generation              |
+| Variable              | Required | Default                  | Description                              |
+|-----------------------|----------|--------------------------|------------------------------------------|
+| `POSTGRES_PASSWORD`   | No       | `sociallocal`            | PostgreSQL password                      |
+| `FACEBOOK_APP_ID`     | Yes      | —                        | Facebook Developer App ID                |
+| `FACEBOOK_APP_SECRET` | Yes      | —                        | Facebook Developer App Secret            |
+| `APP_URL`             | Yes      | `http://localhost:8080`  | Base URL for OAuth callbacks             |
+| `PUBLIC_URL`          | No       | `http://localhost:8080`  | Base URL for uploaded file URLs          |
+| `PORT`                | No       | `8080`                   | Host port for the frontend               |
+| `HUGGING_FACE_API_KEY`| No       | —                        | HuggingFace key for AI image generation  |
