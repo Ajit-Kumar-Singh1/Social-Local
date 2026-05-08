@@ -1,0 +1,35 @@
+{
+  "name": "social-local-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --enable-source-maps --watch ./dist/index.mjs",
+    "build": "node ./build.mjs",
+    "start": "node --enable-source-maps ./dist/index.mjs",
+    "db:push": "drizzle-kit push",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "drizzle-orm": "^0.43.1",
+    "express": "^5.1.0",
+    "multer": "^2.0.0",
+    "pg": "^8.16.0",
+    "pino": "^9.7.0",
+    "pino-http": "^10.5.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^22.15.18",
+    "@types/pg": "^8.11.14",
+    "drizzle-kit": "^0.31.1",
+    "esbuild": "^0.25.4",
+    "esbuild-plugin-pino": "^2.3.3",
+    "pino-pretty": "^13.0.0",
+    "typescript": "^5.8.3"
+  }
+}
