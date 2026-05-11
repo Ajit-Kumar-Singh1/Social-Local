@@ -1,9 +1,11 @@
 import { useState, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
 import { format, startOfDay } from "date-fns";
+import * as XLSX from "xlsx";
 import {
   Plus, Trash2, Send, Loader2, AlertCircle, Type, Image as ImageIcon,
-  Video, Sparkles, CalendarIcon, CheckCircle2, ArrowLeft, Upload, Link as LinkIcon, X,
+  Video, Sparkles, CalendarIcon, CheckCircle2, ArrowLeft, Upload,
+  Link as LinkIcon, X, FileSpreadsheet, Download, FileUp, Info,
 } from "lucide-react";
 import {
   useListPages, useGenerateImage, getListPostsQueryKey, getGetDashboardStatsQueryKey,
@@ -16,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 type PostType = "text" | "image" | "video";
 type MediaMode = "ai" | "upload" | "url";
@@ -34,9 +37,10 @@ interface BulkRow {
   uploadedFileName: string;
   scheduledDate: string;
   scheduledTime: string;
+  fromImport?: boolean;
 }
 
-const makeRow = (pageId = 0): BulkRow => ({
+const makeRow = (pageId = 0, overrides: Partial<BulkRow> = {}): BulkRow => ({
   id: Math.random().toString(36).slice(2),
   pageId,
   postType: "image",
@@ -50,6 +54,7 @@ const makeRow = (pageId = 0): BulkRow => ({
   uploadedFileName: "",
   scheduledDate: format(new Date(), "yyyy-MM-dd"),
   scheduledTime: format(new Date(Date.now() + 3600_000), "HH:mm"),
+  ...overrides,
 });
 
 const POST_TYPE_OPTIONS: { value: PostType; label: string; icon: React.ElementType }[] = [
@@ -58,16 +63,148 @@ const POST_TYPE_OPTIONS: { value: PostType; label: string; icon: React.ElementTy
   { value: "video", label: "Video", icon: Video },
 ];
 
+// ─── Excel helpers ─────────────────────────────────────────────────────────────
+
+const TEMPLATE_HEADERS = ["post_type", "caption", "ai_prompt", "title", "media_url"];
+
+const TEMPLATE_EXAMPLES = [
+  ["image", "Check out our latest product! #launch #newproduct #excited", "A sleek product on a white background, photorealistic", "Launch Post", ""],
+  ["text", "Happy Monday! What are your goals for this week? #motivation #monday", "", "", ""],
+  ["image", "Behind the scenes at our office 🏢 #behindthescenes #team", "A modern open-plan office with happy employees working together", "Office BTS", ""],
+  ["video", "Watch our new tutorial! #tutorial #howto #tips", "", "Tutorial Video", "https://example.com/video.mp4"],
+  ["text", "Thank you for 10,000 followers! 🎉 #milestone #grateful #community", "", "10K Milestone", ""],
+];
+
+function downloadTemplate() {
+  const wb = XLSX.utils.book_new();
+  const wsData = [TEMPLATE_HEADERS, ...TEMPLATE_EXAMPLES];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  ws["!cols"] = [
+    { wch: 10 },
+    { wch: 60 },
+    { wch: 50 },
+    { wch: 20 },
+    { wch: 40 },
+  ];
+
+  // Bold header row style hint (xlsx community edition doesn't support full styles but sets widths)
+  XLSX.utils.book_append_sheet(wb, ws, "Posts");
+
+  // Add an Instructions sheet
+  const instructions = XLSX.utils.aoa_to_sheet([
+    ["Column", "Required", "Values", "Description"],
+    ["post_type", "No (default: image)", "text / image / video", "Type of Facebook post"],
+    ["caption", "YES", "Any text", "The post caption and hashtags"],
+    ["ai_prompt", "No", "Any text", "Prompt for AI image generation (only used for image posts)"],
+    ["title", "No", "Any text", "Internal title for your reference"],
+    ["media_url", "No", "URL", "Direct URL to an image or video (skips AI generation)"],
+    ["", "", "", ""],
+    ["Notes:", "", "", ""],
+    ["- For image posts: fill ai_prompt OR media_url (ai_prompt takes priority)"],
+    ["- For text posts: caption is the only required field"],
+    ["- Date/time is set in the app after upload, not in this file"],
+  ]);
+  instructions["!cols"] = [{ wch: 15 }, { wch: 22 }, { wch: 22 }, { wch: 55 }];
+  XLSX.utils.book_append_sheet(wb, instructions, "Instructions");
+
+  XLSX.writeFile(wb, "bulk-posts-template.xlsx");
+}
+
+type ParsedImportRow = {
+  rowNum: number;
+  postType: PostType;
+  caption: string;
+  aiPrompt: string;
+  title: string;
+  mediaUrl: string;
+  error?: string;
+};
+
+function parseExcel(file: File): Promise<ParsedImportRow[]> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target!.result as ArrayBuffer);
+        const wb = XLSX.read(data, { type: "array" });
+        const ws = wb.Sheets[wb.SheetNames[0]!]!;
+        const rows = XLSX.utils.sheet_to_json<Record<string, string>>(ws, {
+          defval: "",
+          raw: false,
+        });
+
+        if (rows.length === 0) {
+          reject(new Error("The spreadsheet is empty or has no data rows."));
+          return;
+        }
+
+        const parsed: ParsedImportRow[] = rows.map((row, i) => {
+          const rowNum = i + 2; // 1-based + header row
+          const rawType = (row["post_type"] ?? row["Post Type"] ?? row["type"] ?? "image")
+            .toLowerCase().trim();
+          const postType: PostType =
+            rawType === "text" ? "text" : rawType === "video" ? "video" : "image";
+
+          const caption = (row["caption"] ?? row["Caption"] ?? row["message"] ?? row["Message"] ?? "").trim();
+
+          if (!caption) {
+            return {
+              rowNum,
+              postType,
+              caption: "",
+              aiPrompt: "",
+              title: "",
+              mediaUrl: "",
+              error: `Row ${rowNum}: caption is required`,
+            };
+          }
+
+          return {
+            rowNum,
+            postType,
+            caption,
+            aiPrompt: (row["ai_prompt"] ?? row["AI Prompt"] ?? row["prompt"] ?? "").trim(),
+            title: (row["title"] ?? row["Title"] ?? "").trim(),
+            mediaUrl: (row["media_url"] ?? row["Media URL"] ?? row["url"] ?? "").trim(),
+          };
+        });
+
+        resolve(parsed);
+      } catch (err) {
+        reject(new Error("Failed to parse file. Make sure it's a valid .xlsx or .xls file."));
+      }
+    };
+    reader.onerror = () => reject(new Error("Failed to read file."));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// ─── Main component ────────────────────────────────────────────────────────────
+
 export function BulkScheduler() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: pages, isLoading: loadingPages } = useListPages();
   const generateImage = useGenerateImage();
+  const excelInputRef = useRef<HTMLInputElement>(null);
 
   const [rows, setRows] = useState<BulkRow[]>([makeRow()]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [importing, setImporting] = useState(false);
+
+  // Import preview state
+  const [importPreview, setImportPreview] = useState<ParsedImportRow[] | null>(null);
+  const [importFileName, setImportFileName] = useState("");
+  const [importPageId, setImportPageId] = useState<number>(0);
+  const [importDefaultDate, setImportDefaultDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [importDefaultTime, setImportDefaultTime] = useState(
+    format(new Date(Date.now() + 3600_000), "HH:mm")
+  );
+  // Per-row overrides for date/time in the import preview
+  const [importRowSchedules, setImportRowSchedules] = useState<Record<number, { date: string; time: string }>>({});
 
   const updateRow = useCallback((id: string, patch: Partial<BulkRow>) => {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
@@ -122,10 +259,90 @@ export function BulkScheduler() {
     }
   };
 
+  // ── Excel import handlers ──────────────────────────────────────────────────
+
+  const handleExcelFile = async (file: File) => {
+    setImporting(true);
+    setImportFileName(file.name);
+    try {
+      const parsed = await parseExcel(file);
+      setImportPreview(parsed);
+      setImportRowSchedules({});
+      // Default page to the first connected page
+      if (!importPageId && pages && pages.length > 0) {
+        setImportPageId(pages[0]!.id);
+      }
+    } catch (err) {
+      toast({
+        title: "Import failed",
+        description: err instanceof Error ? err.message : "Could not parse file.",
+        variant: "destructive",
+      });
+    } finally {
+      setImporting(false);
+      if (excelInputRef.current) excelInputRef.current.value = "";
+    }
+  };
+
+  const getImportRowSchedule = (rowNum: number) => ({
+    date: importRowSchedules[rowNum]?.date ?? importDefaultDate,
+    time: importRowSchedules[rowNum]?.time ?? importDefaultTime,
+  });
+
+  const updateImportRowSchedule = (rowNum: number, patch: { date?: string; time?: string }) => {
+    setImportRowSchedules((prev) => ({
+      ...prev,
+      [rowNum]: { ...getImportRowSchedule(rowNum), ...patch },
+    }));
+  };
+
+  const confirmImport = () => {
+    if (!importPreview) return;
+    if (!importPageId) {
+      toast({ title: "Select a page", description: "Choose which Facebook page to post to.", variant: "destructive" });
+      return;
+    }
+
+    const validRows = importPreview.filter((r) => !r.error);
+    const newBulkRows = validRows.map((r) => {
+      const { date, time } = getImportRowSchedule(r.rowNum);
+      const mediaMode: MediaMode = r.mediaUrl ? "url" : r.aiPrompt ? "ai" : "url";
+      return makeRow(importPageId, {
+        postType: r.postType,
+        caption: r.caption,
+        title: r.title,
+        mediaPrompt: r.aiPrompt,
+        mediaUrl: r.mediaUrl,
+        mediaMode,
+        scheduledDate: date,
+        scheduledTime: time,
+        fromImport: true,
+      });
+    });
+
+    // Replace the single empty placeholder row if it's untouched
+    setRows((prev) => {
+      const isPlaceholderOnly = prev.length === 1 && !prev[0]!.caption && !prev[0]!.mediaUrl;
+      return isPlaceholderOnly ? newBulkRows : [...prev, ...newBulkRows];
+    });
+
+    const errorCount = importPreview.filter((r) => r.error).length;
+    setImportPreview(null);
+    setImportFileName("");
+    toast({
+      title: `${newBulkRows.length} posts imported`,
+      description: errorCount > 0 ? `${errorCount} rows skipped (missing caption).` : "Review and adjust dates below, then schedule.",
+    });
+  };
+
+  // ── Build scheduled timestamp ──────────────────────────────────────────────
+
   const buildScheduledAt = (row: BulkRow): string | null => {
     if (!row.scheduledDate) return null;
     return new Date(`${row.scheduledDate}T${row.scheduledTime || "00:00"}`).toISOString();
   };
+
+  // ── Submit ─────────────────────────────────────────────────────────────────
 
   const handleSubmit = async () => {
     const invalid = rows.filter((r) => !r.pageId || !r.caption.trim());
@@ -176,6 +393,8 @@ export function BulkScheduler() {
     }
   };
 
+  // ── Guards ─────────────────────────────────────────────────────────────────
+
   if (!loadingPages && (!pages || pages.length === 0)) {
     return (
       <div className="flex flex-col items-center justify-center p-12 bg-card border border-border rounded-xl text-center animate-in fade-in duration-500">
@@ -201,8 +420,13 @@ export function BulkScheduler() {
     );
   }
 
+  const importErrors = importPreview?.filter((r) => r.error) ?? [];
+  const importValid = importPreview?.filter((r) => !r.error) ?? [];
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="icon" onClick={() => setLocation("/posts")} className="shrink-0">
@@ -210,7 +434,7 @@ export function BulkScheduler() {
           </Button>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Bulk Scheduler</h1>
-            <p className="text-muted-foreground mt-1">Add multiple posts at once — like filling in a spreadsheet.</p>
+            <p className="text-muted-foreground mt-1">Add rows manually or import from an Excel file.</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -224,6 +448,197 @@ export function BulkScheduler() {
         </div>
       </div>
 
+      {/* Excel Import Card */}
+      <Card className="border-border">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <FileSpreadsheet className="h-4 w-4 text-green-600" />
+            Import from Excel
+          </CardTitle>
+          <CardDescription>
+            Upload an .xlsx file with your posts. Download the template to see the required format.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <input
+              ref={excelInputRef}
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleExcelFile(file);
+              }}
+            />
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => excelInputRef.current?.click()}
+              disabled={importing}
+            >
+              {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}
+              {importing ? "Parsing…" : "Upload Excel / CSV"}
+            </Button>
+            <Button variant="ghost" className="gap-2 text-muted-foreground" onClick={downloadTemplate}>
+              <Download className="h-4 w-4" />
+              Download Template
+            </Button>
+            <div className="flex items-start gap-1.5 text-xs text-muted-foreground max-w-sm">
+              <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+              <span>Columns: <code className="bg-muted px-1 rounded">post_type</code>, <code className="bg-muted px-1 rounded">caption</code>, <code className="bg-muted px-1 rounded">ai_prompt</code>, <code className="bg-muted px-1 rounded">title</code>, <code className="bg-muted px-1 rounded">media_url</code></span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Import Preview */}
+      {importPreview && (
+        <Card className="border-primary/30 bg-primary/3 animate-in fade-in slide-in-from-top-2 duration-300">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                Review Import — {importFileName}
+              </CardTitle>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setImportPreview(null)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <CardDescription>
+              {importValid.length} valid row{importValid.length !== 1 ? "s" : ""} found
+              {importErrors.length > 0 && ` · ${importErrors.length} row${importErrors.length !== 1 ? "s" : ""} will be skipped (missing caption)`}.
+              Set the target page and schedule times, then click Import.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+
+            {/* Global controls */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-muted/50 rounded-lg border border-border">
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Post to Page</label>
+                <Select
+                  value={importPageId ? importPageId.toString() : ""}
+                  onValueChange={(v) => setImportPageId(parseInt(v, 10))}
+                >
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue placeholder="Select page…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {pages?.map((p) => (
+                      <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Default Date (for all rows)</label>
+                <Input
+                  type="date"
+                  className="h-8 text-sm"
+                  min={format(startOfDay(new Date()), "yyyy-MM-dd")}
+                  value={importDefaultDate}
+                  onChange={(e) => setImportDefaultDate(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Default Time</label>
+                <Input
+                  type="time"
+                  className="h-8 text-sm"
+                  value={importDefaultTime}
+                  onChange={(e) => setImportDefaultTime(e.target.value)}
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">Override date/time per row below if needed.</p>
+
+            {/* Per-row preview table */}
+            <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+              {importPreview.map((r) => {
+                const sched = getImportRowSchedule(r.rowNum);
+                const TypeIcon = r.postType === "text" ? Type : r.postType === "video" ? Video : ImageIcon;
+                if (r.error) {
+                  return (
+                    <div key={r.rowNum} className="flex items-center gap-3 px-3 py-2 rounded-lg border border-destructive/30 bg-destructive/5 text-xs text-destructive">
+                      <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                      <span>{r.error} — row will be skipped</span>
+                    </div>
+                  );
+                }
+                return (
+                  <div
+                    key={r.rowNum}
+                    className="grid gap-2 p-3 rounded-lg border border-border bg-card items-center"
+                    style={{ gridTemplateColumns: "20px 60px 1fr auto" }}
+                  >
+                    <span className="text-xs text-muted-foreground font-mono">{r.rowNum - 1}</span>
+
+                    <div className="flex flex-col items-center gap-0.5">
+                      <TypeIcon className="h-3.5 w-3.5 text-primary" />
+                      <span className="text-[10px] text-muted-foreground capitalize">{r.postType}</span>
+                    </div>
+
+                    <div className="min-w-0">
+                      {r.title && (
+                        <p className="text-xs font-medium text-foreground truncate">{r.title}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground truncate">{r.caption}</p>
+                      {r.aiPrompt && (
+                        <p className="text-[10px] text-primary/70 truncate flex items-center gap-1 mt-0.5">
+                          <Sparkles className="h-2.5 w-2.5" /> {r.aiPrompt}
+                        </p>
+                      )}
+                      {r.mediaUrl && (
+                        <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
+                          <LinkIcon className="h-2.5 w-2.5" /> {r.mediaUrl}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex gap-1.5 shrink-0">
+                      <Input
+                        type="date"
+                        className="h-7 text-xs w-32"
+                        min={format(startOfDay(new Date()), "yyyy-MM-dd")}
+                        value={sched.date}
+                        onChange={(e) => updateImportRowSchedule(r.rowNum, { date: e.target.value })}
+                      />
+                      <Input
+                        type="time"
+                        className="h-7 text-xs w-24"
+                        value={sched.time}
+                        onChange={(e) => updateImportRowSchedule(r.rowNum, { time: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Error summary */}
+            {importErrors.length > 0 && (
+              <p className="text-xs text-destructive">
+                {importErrors.length} row{importErrors.length !== 1 ? "s" : ""} with missing captions will be skipped.
+              </p>
+            )}
+
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-border">
+              <Button variant="outline" onClick={() => setImportPreview(null)}>Cancel</Button>
+              <Button
+                onClick={confirmImport}
+                disabled={importValid.length === 0 || !importPageId}
+                className="gap-2"
+              >
+                <FileUp className="h-4 w-4" />
+                Import {importValid.length} Post{importValid.length !== 1 ? "s" : ""} into Scheduler
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Column headers (desktop) */}
       <div
         className="hidden xl:grid gap-2 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-widest"
         style={{ gridTemplateColumns: "2fr 90px 1.2fr 2fr 2.4fr 1.6fr 36px" }}
@@ -237,6 +652,7 @@ export function BulkScheduler() {
         <span />
       </div>
 
+      {/* Rows */}
       <div className="space-y-3">
         {rows.map((row, idx) => (
           <BulkRowComponent
@@ -265,6 +681,8 @@ export function BulkScheduler() {
     </div>
   );
 }
+
+// ─── BulkRowComponent ──────────────────────────────────────────────────────────
 
 interface BulkRowProps {
   row: BulkRow;
@@ -300,11 +718,15 @@ function BulkRowComponent({ row, idx, pages, total, onUpdate, onRemove, onGenera
 
   return (
     <div
-      className="bg-card border border-border rounded-xl p-4 space-y-3 xl:space-y-0 xl:grid xl:gap-2 xl:items-start"
+      className={cn(
+        "bg-card border rounded-xl p-4 space-y-3 xl:space-y-0 xl:grid xl:gap-2 xl:items-start",
+        row.fromImport ? "border-primary/30" : "border-border"
+      )}
       style={{ gridTemplateColumns: "2fr 90px 1.2fr 2fr 2.4fr 1.6fr 36px" }}
     >
       <div className="xl:hidden flex items-center gap-2 mb-1">
         <Badge variant="outline" className="text-xs">Row {idx + 1}</Badge>
+        {row.fromImport && <Badge variant="secondary" className="text-xs gap-1"><FileSpreadsheet className="h-2.5 w-2.5" />Imported</Badge>}
       </div>
 
       <div className="space-y-1">
