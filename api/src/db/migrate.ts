@@ -22,6 +22,7 @@ export async function initDb(): Promise<void> {
         post_type         TEXT DEFAULT 'image',
         caption           TEXT NOT NULL,
         image_url         TEXT,
+        media_prompt      TEXT,
         audio_url         TEXT,
         status            TEXT NOT NULL DEFAULT 'draft',
         scheduled_at      TIMESTAMP,
@@ -30,6 +31,8 @@ export async function initDb(): Promise<void> {
         error_message     TEXT,
         created_at        TIMESTAMP NOT NULL DEFAULT NOW()
       );
+
+      ALTER TABLE posts ADD COLUMN IF NOT EXISTS media_prompt TEXT;
     `);
     logger.info("Database tables ready");
   } catch (err) {

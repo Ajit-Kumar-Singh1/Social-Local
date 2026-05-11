@@ -1,0 +1,392 @@
+ ✔ social-local-main-api                   Built                                                                0.0s 
+ ✔ social-local-main-frontend              Built                                                                0.0s 
+ ✔ Container social-local-main-postgres-1  Running                                                              0.0s 
+ ✔ Container social-local-main-api-1       Recreated                                                            1.4s 
+ ✔ Container social-local-main-frontend-1  Recreated                                                            0.6s 
+Attaching to api-1, frontend-1, postgres-1
+api-1  | {"level":30,"time":1778506517591,"pid":1,"hostname":"031f15ef191a","msg":"Database tables ready"}
+
+
+postgres-1  | 2026-05-11 13:35:17.612 UTC [3997] ERROR:  column "media_prompt" does not exist at character 71ng"}
+api-1       | {"level":30,"time":1778506517594,"pid":1,"hostname":"031f15ef191a","msg":"Post scheduler started — checking every 60 seconds"}
+postgres-1  | 2026-05-11 13:35:17.612 UTC [3997] STATEMENT:  select "id", "page_id", "title", "post_type", "caption", "image_url", "media_prompt", "audio_url", "status", "scheduled_at", "published_at", "facebook_post_id", "error_message", "created_at" from "posts" where ("posts"."status" = $1 and "posts"."scheduled_at" <= $2)
+frontend-1  | /docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
+frontend-1  | /docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
+frontend-1  | /docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+frontend-1  | 10-listen-on-ipv6-by-default.sh: info: Getting the checksum of /etc/nginx/conf.d/default.conf
+frontend-1  | 10-listen-on-ipv6-by-default.sh: info: /etc/nginx/conf.d/default.conf differs from the packaged version
+api-1       | /app/node_modules/pg-pool/index.js:45
+frontend-1  | /docker-entrypoint.sh: Sourcing /docker-entrypoint.d/15-local-resolvers.envsh
+
+
+frontend-1  | /docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+api-1       |           ^
+frontend-1  | /docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
+api-1       | 
+frontend-1  | /docker-entrypoint.sh: Configuration complete; ready for start up
+api-1       | error: column "media_prompt" does not exist
+frontend-1  | 2026/05/11 13:35:17 [notice] 1#1: using the "epoll" event method
+
+api-1       |     at <anonymous> (/app/node_modules/pg-pool/index.js:45:11)
+frontend-1  | 2026/05/11 13:35:17 [notice] 1#1: nginx/1.29.8
+api-1       |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+frontend-1  | 2026/05/11 13:35:17 [notice] 1#1: built by gcc 15.2.0 (Alpine 15.2.0) 
+
+frontend-1  | 2026/05/11 13:35:17 [notice] 1#1: OS: Linux 6.6.114.1-microsoft-standard-WSL2
+
+
+frontend-1  | 2026/05/11 13:35:17 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+api-1       |     at async publishScheduledPosts (/app/src/lib/scheduler.ts:10:20) {
+
+
+frontend-1  | 2026/05/11 13:35:17 [notice] 1#1: start worker processes
+api-1       |   severity: 'ERROR',[notice] 1#1: start worker process 30
+api-1       |   code: '42703',:17 [notice] 1#1: start worker process 31
+api-1       |   detail: undefined,
+api-1       |   hint: undefined,7 [notice] 1#1: start worker process 33
+api-1       |   position: '71',17 [notice] 1#1: start worker process 34
+
+
+api-1       |   internalPosition: undefined,#1: start worker process 35
+
+
+api-1       |   internalQuery: undefined,] 1#1: start worker process 36
+frontend-1  | 2026/05/11 13:35:17 [notice] 1#1: start worker process 37
+api-1       |   where: undefined,
+api-1       |   schema: undefined,[notice] 1#1: start worker process 38
+frontend-1  | 2026/05/11 13:35:17 [notice] 1#1: start worker process 39
+api-1       |   table: undefined,
+
+
+
+
+frontend-1  | 2026/05/11 13:35:17 [notice] 1#1: start worker process 40
+api-1       |   column: undefined,
+frontend-1  | 2026/05/11 13:35:17 [notice] 1#1: start worker process 41
+api-1       |   dataType: undefined,
+frontend-1  | 2026/05/11 13:35:17 [notice] 1#1: start worker process 42
+api-1       |   constraint: undefined,
+api-1       |   file: 'parse_relation.c',
+frontend-1  | 2026/05/11 13:35:17 [notice] 1#1: start worker process 44
+api-1       |   line: '3722',
+
+
+frontend-1  | 2026/05/11 13:35:17 [notice] 1#1: start worker process 45
+api-1       |   routine: 'errorMissingColumn'
+api-1       | }
+api-1       | 
+api-1       | Node.js v22.22.2
+api-1 exited with code 1 (restarting)
+api-1       | {"level":30,"time":1778506518363,"pid":1,"hostname":"031f15ef191a","msg":"Database tables ready"}
+api-1       | {"level":30,"time":1778506518366,"pid":1,"hostname":"031f15ef191a","port":5000,"msg":"Server listening"} View in Docker Desktop   o View Config   w Enable Watch
+api-1       | {"level":30,"time":1778506518366,"pid":1,"hostname":"031f15ef191a","msg":"Post scheduler started — checking every 60 seconds"}
+postgres-1  | 2026-05-11 13:35:18.372 UTC [3998] ERROR:  column "media_prompt" does not exist at character 71
+postgres-1  | 2026-05-11 13:35:18.372 UTC [3998] STATEMENT:  select "id", "page_id", "title", "post_type", "caption", "image_url", "media_prompt", "audio_url", "status", "scheduled_at", "published_at", "facebook_post_id", "error_message", "created_at" from "posts" where ("posts"."status" = $1 and "posts"."scheduled_at" <= $2)
+api-1       | /app/node_modules/pg-pool/index.js:45
+api-1       |     Error.captureStackTrace(err)
+api-1       |           ^  o View Config   w Enable Watch
+api-1       | 
+api-1       | error: column "media_prompt" does not exist
+api-1       |     at <anonymous> (/app/node_modules/pg-pool/index.js:45:11)
+api-1       |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+api-1       |     at async <anonymous> (/app/node_modules/src/node-postgres/session.ts:144:19)
+api-1       |     at async publishScheduledPosts (/app/src/lib/scheduler.ts:10:20) {
+api-1       |   length: 112,
+api-1       |   severity: 'ERROR',
+api-1       |   code: '42703',
+api-1       |   detail: undefined,
+api-1       |   hint: undefined,
+api-1       |   position: '71',
+api-1       |   internalPosition: undefined,
+api-1       |   internalQuery: undefined,
+api-1       |   where: undefined,
+api-1       |   schema: undefined,
+api-1       |   table: undefined,
+api-1       |   column: undefined,
+api-1       |   dataType: undefined,
+api-1       |   constraint: undefined,
+api-1       |   file: 'parse_relation.c',
+api-1       |   line: '3722',
+api-1       |   routine: 'errorMissingColumn'
+api-1       | }
+api-1       | 
+api-1       | Node.js v22.22.2
+api-1 exited with code 1 (restarting)
+api-1       | {"level":30,"time":1778506519030,"pid":1,"hostname":"031f15ef191a","msg":"Database tables ready"}
+postgres-1  | 2026-05-11 13:35:19.037 UTC [3999] ERROR:  column "media_prompt" does not exist at character 71
+postgres-1  | 2026-05-11 13:35:19.037 UTC [3999] STATEMENT:  select "id", "page_id", "title", "post_type", "caption", "image_url", "media_prompt", "audio_url", "status", "scheduled_at", "published_at", "facebook_post_id", "error_message", "created_at" from "posts" where ("posts"."status" = $1 and "posts"."scheduled_at" <= $2)
+api-1       | /app/node_modules/pg-pool/index.js:45
+api-1       |     Error.captureStackTrace(err)
+api-1       |           ^  o View Config   w Enable Watch
+api-1       | 
+api-1       | error: column "media_prompt" does not exist
+api-1       |     at <anonymous> (/app/node_modules/pg-pool/index.js:45:11)
+api-1       |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+api-1       |     at async <anonymous> (/app/node_modules/src/node-postgres/session.ts:144:19)
+api-1       |     at async publishScheduledPosts (/app/src/lib/scheduler.ts:10:20) {
+api-1       |   length: 112,
+api-1       |   severity: 'ERROR',
+api-1       |   code: '42703',
+api-1       |   detail: undefined,
+api-1       |   hint: undefined,
+api-1       |   position: '71',
+api-1       |   internalPosition: undefined,
+api-1       |   internalQuery: undefined,
+api-1       |   where: undefined,
+api-1       |   schema: undefined,
+api-1       |   table: undefined,
+api-1       |   column: undefined,
+api-1       |   dataType: undefined,
+api-1       |   constraint: undefined,
+api-1       |   file: 'parse_relation.c',
+api-1       |   line: '3722',
+api-1       |   routine: 'errorMissingColumn'
+api-1       | }
+api-1       | 
+api-1       | Node.js v22.22.2
+api-1 exited with code 1 (restarting)
+api-1       | {"level":30,"time":1778506519854,"pid":1,"hostname":"031f15ef191a","msg":"Database tables ready"}
+api-1       | {"level":30,"time":1778506519857,"pid":1,"hostname":"031f15ef191a","port":5000,"msg":"Server listening"} View in Docker Desktop   o View Config   w Enable Watch
+api-1       | {"level":30,"time":1778506519857,"pid":1,"hostname":"031f15ef191a","msg":"Post scheduler started — checking every 60 seconds"}
+postgres-1  | 2026-05-11 13:35:19.863 UTC [4000] ERROR:  column "media_prompt" does not exist at character 71
+postgres-1  | 2026-05-11 13:35:19.863 UTC [4000] STATEMENT:  select "id", "page_id", "title", "post_type", "caption", "image_url", "media_prompt", "audio_url", "status", "scheduled_at", "published_at", "facebook_post_id", "error_message", "created_at" from "posts" where ("posts"."status" = $1 and "posts"."scheduled_at" <= $2)
+api-1       | /app/node_modules/pg-pool/index.js:45
+api-1       |     Error.captureStackTrace(err)
+api-1       |           ^  o View Config   w Enable Watch
+api-1       | 
+api-1       | error: column "media_prompt" does not exist
+api-1       |     at <anonymous> (/app/node_modules/pg-pool/index.js:45:11)
+api-1       |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+api-1       |     at async <anonymous> (/app/node_modules/src/node-postgres/session.ts:144:19)
+api-1       |     at async publishScheduledPosts (/app/src/lib/scheduler.ts:10:20) {
+api-1       |   length: 112,
+api-1       |   severity: 'ERROR',
+api-1       |   code: '42703',
+api-1       |   detail: undefined,
+api-1       |   hint: undefined,
+api-1       |   position: '71',
+api-1       |   internalPosition: undefined,
+api-1       |   internalQuery: undefined,
+api-1       |   where: undefined,
+api-1       |   schema: undefined,
+api-1       |   table: undefined,
+api-1       |   column: undefined,
+api-1       |   dataType: undefined,
+api-1       |   constraint: undefined,
+api-1       |   file: 'parse_relation.c',
+api-1       |   line: '3722',
+api-1       |   routine: 'errorMissingColumn'
+api-1       | }
+api-1       | 
+api-1       | Node.js v22.22.2
+api-1 exited with code 1 (restarting)
+api-1       | {"level":30,"time":1778506521071,"pid":1,"hostname":"031f15ef191a","msg":"Database tables ready"}
+api-1       | {"level":30,"time":1778506521074,"pid":1,"hostname":"031f15ef191a","port":5000,"msg":"Server listening"}
+api-1       | {"level":30,"time":1778506521074,"pid":1,"hostname":"031f15ef191a","msg":"Post scheduler started — checking every 60 seconds"}
+postgres-1  | 2026-05-11 13:35:21.079 UTC [4008] ERROR:  column "media_prompt" does not exist at character 71
+postgres-1  | 2026-05-11 13:35:21.079 UTC [4008] STATEMENT:  select "id", "page_id", "title", "post_type", "caption", "image_url", "media_prompt", "audio_url", "status", "scheduled_at", "published_at", "facebook_post_id", "error_message", "created_at" from "posts" where ("posts"."status" = $1 and "posts"."scheduled_at" <= $2)
+api-1       | /app/node_modules/pg-pool/index.js:45
+api-1       |     Error.captureStackTrace(err)
+api-1       |           ^  o View Config   w Enable Watch
+api-1       | 
+api-1       | error: column "media_prompt" does not exist
+api-1       |     at <anonymous> (/app/node_modules/pg-pool/index.js:45:11)
+api-1       |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+api-1       |     at async <anonymous> (/app/node_modules/src/node-postgres/session.ts:144:19)
+api-1       |     at async publishScheduledPosts (/app/src/lib/scheduler.ts:10:20) {
+api-1       |   length: 112,
+api-1       |   severity: 'ERROR',
+api-1       |   code: '42703',
+api-1       |   detail: undefined,
+api-1       |   hint: undefined,
+api-1       |   position: '71',
+api-1       |   internalPosition: undefined,
+api-1       |   internalQuery: undefined,
+api-1       |   where: undefined,
+api-1       |   schema: undefined,
+api-1       |   table: undefined,
+api-1       |   column: undefined,
+api-1       |   dataType: undefined,
+api-1       |   constraint: undefined,
+api-1       |   file: 'parse_relation.c',
+api-1       |   line: '3722',
+api-1       |   routine: 'errorMissingColumn'
+api-1       | }
+api-1       | 
+api-1       | Node.js v22.22.2
+api-1 exited with code 1 (restarting)
+api-1       | {"level":30,"time":1778506523088,"pid":1,"hostname":"031f15ef191a","msg":"Database tables ready"}
+api-1       | {"level":30,"time":1778506523091,"pid":1,"hostname":"031f15ef191a","port":5000,"msg":"Server listening"} View in Docker Desktop   o View Config   w Enable Watch
+postgres-1  | 2026-05-11 13:35:23.097 UTC [4009] ERROR:  column "media_prompt" does not exist at character 71
+api-1       | {"level":30,"time":1778506523091,"pid":1,"hostname":"031f15ef191a","msg":"Post scheduler started — checking every 60 seconds"}
+postgres-1  | 2026-05-11 13:35:23.097 UTC [4009] STATEMENT:  select "id", "page_id", "title", "post_type", "caption", "image_url", "media_prompt", "audio_url", "status", "scheduled_at", "published_at", "facebook_post_id", "error_message", "created_at" from "posts" where ("posts"."status" = $1 and "posts"."scheduled_at" <= $2)
+api-1       | /app/node_modules/pg-pool/index.js:45
+api-1       |     Error.captureStackTrace(err)
+api-1       |           ^  o View Config   w Enable Watch
+api-1       | 
+api-1       | error: column "media_prompt" does not exist
+api-1       |     at <anonymous> (/app/node_modules/pg-pool/index.js:45:11)
+api-1       |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+api-1       |     at async <anonymous> (/app/node_modules/src/node-postgres/session.ts:144:19)
+api-1       |     at async publishScheduledPosts (/app/src/lib/scheduler.ts:10:20) {
+api-1       |   length: 112,
+api-1       |   severity: 'ERROR',
+api-1       |   code: '42703',
+api-1       |   detail: undefined,
+api-1       |   hint: undefined,
+api-1       |   position: '71',
+api-1       |   internalPosition: undefined,
+api-1       |   internalQuery: undefined,
+api-1       |   where: undefined,
+api-1       |   schema: undefined,
+api-1       |   table: undefined,
+api-1       |   column: undefined,
+api-1       |   dataType: undefined,
+api-1       |   constraint: undefined,
+api-1       |   file: 'parse_relation.c',
+api-1       |   line: '3722',
+api-1       |   routine: 'errorMissingColumn'
+api-1       | }
+api-1       | 
+api-1       | Node.js v22.22.2
+api-1 exited with code 1 (restarting)
+api-1       | {"level":30,"time":1778506526707,"pid":1,"hostname":"031f15ef191a","msg":"Database tables ready"}
+api-1       | {"level":30,"time":1778506526710,"pid":1,"hostname":"031f15ef191a","port":5000,"msg":"Server listening"} View in Docker Desktop   o View Config   w Enable Watch
+api-1       | {"level":30,"time":1778506526710,"pid":1,"hostname":"031f15ef191a","msg":"Post scheduler started — checking every 60 seconds"}
+postgres-1  | 2026-05-11 13:35:26.715 UTC [4017] ERROR:  column "media_prompt" does not exist at character 71
+postgres-1  | 2026-05-11 13:35:26.715 UTC [4017] STATEMENT:  select "id", "page_id", "title", "post_type", "caption", "image_url", "media_prompt", "audio_url", "status", "scheduled_at", "published_at", "facebook_post_id", "error_message", "created_at" from "posts" where ("posts"."status" = $1 and "posts"."scheduled_at" <= $2)
+api-1       | /app/node_modules/pg-pool/index.js:45
+api-1       |     Error.captureStackTrace(err)
+api-1       |           ^  o View Config   w Enable Watch
+api-1       | 
+api-1       | error: column "media_prompt" does not exist
+api-1       |     at <anonymous> (/app/node_modules/pg-pool/index.js:45:11)
+api-1       |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+api-1       |     at async <anonymous> (/app/node_modules/src/node-postgres/session.ts:144:19)
+api-1       |     at async publishScheduledPosts (/app/src/lib/scheduler.ts:10:20) {
+api-1       |   length: 112,
+api-1       |   severity: 'ERROR',
+api-1       |   code: '42703',
+api-1       |   detail: undefined,
+api-1       |   hint: undefined,
+api-1       |   position: '71',
+api-1       |   internalPosition: undefined,
+api-1       |   internalQuery: undefined,
+api-1       |   where: undefined,
+api-1       |   schema: undefined,
+api-1       |   table: undefined,
+api-1       |   column: undefined,
+api-1       |   dataType: undefined,
+api-1       |   constraint: undefined,
+api-1       |   file: 'parse_relation.c',
+api-1       |   line: '3722',
+api-1       |   routine: 'errorMissingColumn'
+api-1       | }
+api-1       | 
+api-1       | Node.js v22.22.2
+api-1 exited with code 1 (restarting)
+api-1       | {"level":30,"time":1778506533543,"pid":1,"hostname":"031f15ef191a","msg":"Database tables ready"}
+api-1       | {"level":30,"time":1778506533547,"pid":1,"hostname":"031f15ef191a","port":5000,"msg":"Server listening"} View in Docker Desktop   o View Config   w Enable Watch
+api-1       | {"level":30,"time":1778506533547,"pid":1,"hostname":"031f15ef191a","msg":"Post scheduler started — checking every 60 seconds"}
+postgres-1  | 2026-05-11 13:35:33.554 UTC [4025] ERROR:  column "media_prompt" does not exist at character 71
+postgres-1  | 2026-05-11 13:35:33.554 UTC [4025] STATEMENT:  select "id", "page_id", "title", "post_type", "caption", "image_url", "media_prompt", "audio_url", "status", "scheduled_at", "published_at", "facebook_post_id", "error_message", "created_at" from "posts" where ("posts"."status" = $1 and "posts"."scheduled_at" <= $2)
+api-1       | /app/node_modules/pg-pool/index.js:45
+api-1       |     Error.captureStackTrace(err)
+api-1       |           ^  o View Config   w Enable Watch
+api-1       | 
+api-1       | error: column "media_prompt" does not exist
+api-1       |     at <anonymous> (/app/node_modules/pg-pool/index.js:45:11)
+api-1       |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+api-1       |     at async <anonymous> (/app/node_modules/src/node-postgres/session.ts:144:19)
+api-1       |     at async publishScheduledPosts (/app/src/lib/scheduler.ts:10:20) {
+api-1       |   length: 112,
+api-1       |   severity: 'ERROR',
+api-1       |   code: '42703',
+api-1       |   detail: undefined,
+api-1       |   hint: undefined,
+api-1       |   position: '71',
+api-1       |   internalPosition: undefined,
+api-1       |   internalQuery: undefined,
+api-1       |   where: undefined,
+api-1       |   schema: undefined,
+api-1       |   table: undefined,
+api-1       |   column: undefined,
+api-1       |   dataType: undefined,
+api-1       |   constraint: undefined,
+api-1       |   file: 'parse_relation.c',
+api-1       |   line: '3722',
+api-1       |   routine: 'errorMissingColumn'
+api-1       | }
+api-1       | 
+api-1       | Node.js v22.22.2
+api-1 exited with code 1 (restarting)
+api-1       | {"level":30,"time":1778506546849,"pid":1,"hostname":"031f15ef191a","msg":"Database tables ready"}
+api-1       | {"level":30,"time":1778506546852,"pid":1,"hostname":"031f15ef191a","port":5000,"msg":"Server listening"} View in Docker Desktop   o View Config   w Enable Watch
+api-1       | {"level":30,"time":1778506546852,"pid":1,"hostname":"031f15ef191a","msg":"Post scheduler started — checking every 60 seconds"}
+postgres-1  | 2026-05-11 13:35:46.858 UTC [4047] ERROR:  column "media_prompt" does not exist at character 71
+postgres-1  | 2026-05-11 13:35:46.858 UTC [4047] STATEMENT:  select "id", "page_id", "title", "post_type", "caption", "image_url", "media_prompt", "audio_url", "status", "scheduled_at", "published_at", "facebook_post_id", "error_message", "created_at" from "posts" where ("posts"."status" = $1 and "posts"."scheduled_at" <= $2)
+api-1       | /app/node_modules/pg-pool/index.js:45
+api-1       |     Error.captureStackTrace(err)
+api-1       |           ^  o View Config   w Enable Watch
+api-1       | 
+api-1       | error: column "media_prompt" does not exist
+api-1       |     at <anonymous> (/app/node_modules/pg-pool/index.js:45:11)
+api-1       |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+api-1       |     at async <anonymous> (/app/node_modules/src/node-postgres/session.ts:144:19)
+api-1       |     at async publishScheduledPosts (/app/src/lib/scheduler.ts:10:20) {
+api-1       |   length: 112,
+api-1       |   severity: 'ERROR',
+api-1       |   code: '42703',
+api-1       |   detail: undefined,
+api-1       |   hint: undefined,
+api-1       |   position: '71',
+api-1       |   internalPosition: undefined,
+api-1       |   internalQuery: undefined,
+api-1       |   where: undefined,
+api-1       |   schema: undefined,
+api-1       |   table: undefined,
+api-1       |   column: undefined,
+api-1       |   dataType: undefined,
+api-1       |   constraint: undefined,
+api-1       |   file: 'parse_relation.c',
+api-1       |   line: '3722',
+api-1       |   routine: 'errorMissingColumn'
+api-1       | }
+api-1       | 
+api-1       | Node.js v22.22.2
+api-1 exited with code 1 (restarting)
+api-1       | {"level":30,"time":1778506573197,"pid":1,"hostname":"031f15ef191a","msg":"Database tables ready"}
+api-1       | {"level":30,"time":1778506573201,"pid":1,"hostname":"031f15ef191a","port":5000,"msg":"Server listening"} View in Docker Desktop   o View Config   w Enable Watch
+api-1       | {"level":30,"time":1778506573201,"pid":1,"hostname":"031f15ef191a","msg":"Post scheduler started — checking every 60 seconds"}
+postgres-1  | 2026-05-11 13:36:13.214 UTC [4084] ERROR:  column "media_prompt" does not exist at character 71
+postgres-1  | 2026-05-11 13:36:13.214 UTC [4084] STATEMENT:  select "id", "page_id", "title", "post_type", "caption", "image_url", "media_prompt", "audio_url", "status", "scheduled_at", "published_at", "facebook_post_id", "error_message", "created_at" from "posts" where ("posts"."status" = $1 and "posts"."scheduled_at" <= $2)
+api-1       | /app/node_modules/pg-pool/index.js:45
+api-1       |     Error.captureStackTrace(err)
+api-1       |           ^  o View Config   w Enable Watch
+api-1       | 
+api-1       | error: column "media_prompt" does not exist
+api-1       |     at <anonymous> (/app/node_modules/pg-pool/index.js:45:11)
+api-1       |     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+api-1       |     at async <anonymous> (/app/node_modules/src/node-postgres/session.ts:144:19)
+api-1       |     at async publishScheduledPosts (/app/src/lib/scheduler.ts:10:20) {
+api-1       |   length: 112,
+api-1       |   severity: 'ERROR',
+api-1       |   code: '42703',
+api-1       |   detail: undefined,
+api-1       |   hint: undefined,
+api-1       |   position: '71',
+api-1       |   internalPosition: undefined,
+api-1       |   internalQuery: undefined,
+api-1       |   where: undefined,
+api-1       |   schema: undefined,
+api-1       |   table: undefined,
+api-1       |   column: undefined,
+api-1       |   dataType: undefined,
+api-1       |   constraint: undefined,
+api-1       |   file: 'parse_relation.c',
+api-1       |   line: '3722',
+api-1       |   routine: 'errorMissingColumn'
+api-1       | }
+api-1       | 
+api-1       | Node.js v22.22.2
+api-1 exited with code 1 (restarting)
