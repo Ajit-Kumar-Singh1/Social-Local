@@ -1,39 +1,109 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { format } from "date-fns";
-import { 
+import {
   useListPosts,
   ListPostsStatus
 } from "@/lib/api-client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  FileText, 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Plus,
+  Search,
+  Filter,
+  FileText,
   Image as ImageIcon,
   Clock,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Trash2,
+  Loader2,
+  Square,
+  SquareCheck,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function Posts() {
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [deleting, setDeleting] = useState(false);
+
   const { data: posts, isLoading } = useListPosts(
     statusFilter !== "all" ? { status: statusFilter as ListPostsStatus } : undefined
   );
+
+  const allIds = posts?.map((p) => p.id) ?? [];
+  const allSelected = allIds.length > 0 && allIds.every((id) => selectedIds.has(id));
+  const someSelected = selectedIds.size > 0;
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(allIds));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    setDeleting(true);
+    try {
+      const ids = Array.from(selectedIds);
+      const res = await fetch("/api/posts/bulk", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      if (!res.ok) {
+        const data = await res.json() as { error?: string };
+        throw new Error(data.error ?? "Delete failed");
+      }
+      const data = await res.json() as { deleted: number };
+      setSelectedIds(new Set());
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      toast({ title: `${data.deleted} post${data.deleted !== 1 ? "s" : ""} deleted` });
+    } catch (err) {
+      toast({ title: "Delete failed", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -71,14 +141,11 @@ export function Posts() {
       <div className="flex flex-col sm:flex-row gap-4 items-center bg-card p-4 rounded-xl border border-border shadow-sm">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search posts..." 
-            className="pl-9 bg-background"
-          />
+          <Input placeholder="Search posts..." className="pl-9 bg-background" />
         </div>
         <div className="w-full sm:w-48 flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setSelectedIds(new Set()); }}>
             <SelectTrigger className="bg-background">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
@@ -92,6 +159,71 @@ export function Posts() {
           </Select>
         </div>
       </div>
+
+      {/* Bulk action bar */}
+      {someSelected && (
+        <div className="flex items-center justify-between gap-4 px-4 py-3 bg-primary/5 border border-primary/20 rounded-xl animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={toggleSelectAll}
+              className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
+            >
+              {allSelected
+                ? <SquareCheck className="h-4 w-4 text-primary" />
+                : <Square className="h-4 w-4" />}
+              {allSelected ? "Deselect all" : "Select all"}
+            </button>
+            <span className="text-sm text-muted-foreground">
+              {selectedIds.size} post{selectedIds.size !== 1 ? "s" : ""} selected
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>
+              Cancel
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" className="gap-2" disabled={deleting}>
+                  {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                  Delete {selectedIds.size} Post{selectedIds.size !== 1 ? "s" : ""}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete {selectedIds.size} post{selectedIds.size !== 1 ? "s" : ""}?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete the selected posts. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleBulkDelete}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </div>
+      )}
+
+      {/* Select all hint when posts are loaded */}
+      {!isLoading && posts && posts.length > 0 && !someSelected && (
+        <div className="flex items-center gap-2 px-1">
+          <button
+            type="button"
+            onClick={toggleSelectAll}
+            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Square className="h-3.5 w-3.5" />
+            Select all
+          </button>
+        </div>
+      )}
 
       <div className="space-y-4">
         {isLoading ? (
@@ -114,8 +246,8 @@ export function Posts() {
             </div>
             <h2 className="text-2xl font-semibold tracking-tight">No posts found</h2>
             <p className="text-muted-foreground mt-2 max-w-md">
-              {statusFilter !== "all" 
-                ? `You don't have any ${statusFilter} posts yet.` 
+              {statusFilter !== "all"
+                ? `You don't have any ${statusFilter} posts yet.`
                 : "You haven't created any posts yet. Click the button below to get started."}
             </p>
             {statusFilter === "all" && (
@@ -129,9 +261,30 @@ export function Posts() {
           </div>
         ) : (
           posts?.map((post) => (
-            <Link key={post.id} href={`/posts/${post.id}`}>
-              <Card className="border-border/50 bg-card hover:bg-muted/50 transition-colors cursor-pointer group mb-4 shadow-sm">
-                <CardContent className="p-4 flex items-center gap-4">
+            <div key={post.id} className="relative group">
+              {/* Checkbox overlay */}
+              <div
+                className="absolute left-3 top-1/2 -translate-y-1/2 z-10"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Checkbox
+                  checked={selectedIds.has(post.id)}
+                  onCheckedChange={() => toggleSelect(post.id)}
+                  className={cn(
+                    "transition-opacity",
+                    selectedIds.has(post.id) ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                  )}
+                />
+              </div>
+
+              <Card
+                className={cn(
+                  "border-border/50 bg-card hover:bg-muted/50 transition-all cursor-pointer shadow-sm",
+                  selectedIds.has(post.id) && "border-primary/40 bg-primary/5",
+                )}
+                onClick={() => setLocation(`/posts/${post.id}`)}
+              >
+                <CardContent className="p-4 pl-10 flex items-center gap-4">
                   {post.imageUrl ? (
                     <div className="h-16 w-16 rounded-md overflow-hidden bg-muted flex-shrink-0 border border-border">
                       <img src={post.imageUrl} alt="" className="h-full w-full object-cover" />
@@ -141,7 +294,7 @@ export function Posts() {
                       <ImageIcon className="h-6 w-6 text-muted-foreground/50" />
                     </div>
                   )}
-                  
+
                   <div className="flex-1 min-w-0 flex flex-col justify-center">
                     <p className="text-base font-medium text-foreground truncate group-hover:text-primary transition-colors">
                       {post.caption || "Untitled draft"}
@@ -151,14 +304,17 @@ export function Posts() {
                       <span>•</span>
                       <span className="flex items-center gap-1">
                         {post.status === "scheduled" && <Clock className="h-3 w-3" />}
-                        {post.status === "scheduled" 
-                          ? `Scheduled for ${format(new Date(post.scheduledAt!), "MMM d, yyyy 'at' h:mm a")}` 
+                        {post.status === "scheduled"
+                          ? `Scheduled for ${format(new Date(post.scheduledAt!), "MMM d, yyyy 'at' h:mm a")}`
                           : post.status === "published"
                             ? `Published on ${format(new Date(post.publishedAt!), "MMM d, yyyy")}`
                             : `Created on ${format(new Date(post.createdAt), "MMM d, yyyy")}`
                         }
                       </span>
                     </div>
+                    {post.status === "failed" && post.errorMessage && (
+                      <p className="text-xs text-destructive mt-1 truncate">{post.errorMessage}</p>
+                    )}
                   </div>
 
                   <div className="flex flex-col items-end gap-2 shrink-0">
@@ -169,7 +325,7 @@ export function Posts() {
                   </div>
                 </CardContent>
               </Card>
-            </Link>
+            </div>
           ))
         )}
       </div>

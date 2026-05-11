@@ -63,8 +63,42 @@ export function PostNew() {
 
   const postType = form.watch("postType") as PostType;
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    const mediaUrl = values.postType === "video" ? values.videoUrl : values.imageUrl;
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    let mediaUrl = values.postType === "video" ? values.videoUrl : values.imageUrl;
+
+    // If image/video post has no media but a prompt is set, auto-generate the image first
+    if (values.postType !== "text" && !mediaUrl) {
+      if (mediaPrompt.trim()) {
+        toast({ title: "Generating AI image…", description: "Please wait while your image is created." });
+        try {
+          const genRes = await fetch("/api/images/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt: mediaPrompt, style: imageStyle }),
+          });
+          const genData = await genRes.json() as { imageUrl?: string; error?: string };
+          if (!genRes.ok || !genData.imageUrl) throw new Error(genData.error ?? "Generation failed");
+          mediaUrl = genData.imageUrl;
+          form.setValue("imageUrl", genData.imageUrl);
+          toast({ title: "Image generated!", description: "Proceeding to create the post." });
+        } catch (err) {
+          toast({
+            title: "Image generation failed",
+            description: err instanceof Error ? err.message : "Could not generate image. Try again or upload one manually.",
+            variant: "destructive",
+          });
+          return;
+        }
+      } else {
+        toast({
+          title: "Media required",
+          description: "Please generate, upload, or enter a URL for the image/video before saving.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     createPost.mutate(
       {
         data: {

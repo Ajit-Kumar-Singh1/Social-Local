@@ -132,6 +132,26 @@ router.post("/posts/bulk", async (req, res): Promise<void> => {
   res.status(201).json(created);
 });
 
+// DELETE /posts/bulk — bulk delete by IDs
+router.delete("/posts/bulk", async (req, res): Promise<void> => {
+  const body = req.body as { ids?: unknown };
+  const ids = body?.ids;
+  if (!Array.isArray(ids) || ids.length === 0 || !ids.every((id) => typeof id === "number")) {
+    res.status(400).json({ error: "ids must be a non-empty array of numbers" });
+    return;
+  }
+  let deleted = 0;
+  for (const id of ids as number[]) {
+    const [post] = await db.select().from(postsTable).where(eq(postsTable.id, id));
+    if (post) {
+      cleanupUploadedFile(post.imageUrl);
+      await db.delete(postsTable).where(eq(postsTable.id, id));
+      deleted++;
+    }
+  }
+  res.json({ deleted });
+});
+
 router.get("/posts/:id", async (req, res): Promise<void> => {
   const parsed = GetPostParams.safeParse(req.params);
   if (!parsed.success) {

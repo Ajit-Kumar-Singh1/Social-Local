@@ -29,6 +29,19 @@ async function publishScheduledPosts() {
       continue;
     }
 
+    // Guard: never publish an image/video post without media — mark failed instead
+    if (post.postType !== "text" && !post.imageUrl) {
+      await db
+        .update(postsTable)
+        .set({
+          status: "failed",
+          errorMessage: `Post type '${post.postType ?? "image"}' requires media, but no image/video URL was saved. Generate or upload the media before scheduling.`,
+        })
+        .where(eq(postsTable.id, post.id));
+      logger.warn({ postId: post.id, postType: post.postType }, "Skipping scheduled post — no media URL provided");
+      continue;
+    }
+
     try {
       const fbData = await publishToFacebook(page, post);
 
