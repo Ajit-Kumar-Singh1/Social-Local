@@ -1,38 +1,74 @@
 import { Router } from "express";
+import fs from "fs";
+import path from "path";
+import { randomUUID } from "crypto";
 import { GenerateImageBody } from "../schemas.js";
 
 const router = Router();
 
 type Provider = "pollinations" | "huggingface" | "openai" | "gemini";
 
-async function generateWithPollinations(prompt: string): Promise<string> {
-  const encoded = encodeURIComponent(prompt.slice(0, 200));
-  return `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=1024&nologo=true&seed=${Date.now()}`;
+const UPLOAD_DIR = path.resolve(process.cwd(), "uploads");
+if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+
+function getPublicUrl(req: import("express").Request, filename: string): string {
+  const base =
+    process.env.PUBLIC_URL ??
+    (() => {
+      const host = req.get("host") ?? `localhost:${process.env.PORT ?? 5000}`;
+      const proto = host.includes("localhost") || host.includes("127.0.0.1") ? "http" : "https";
+      return `${proto}://${host}`;
+    })();
+  return `${base}/api/uploads/${filename}`;
 }
 
-async function generateWithHuggingFace(prompt: string, model: string): Promise<string> {
+function saveBase64Image(base64Data: string, mimeType: string): string {
+  const ext = mimeType.includes("png") ? "png" : mimeType.includes("gif") ? "gif" : mimeType.includes("webp") ? "webp" : "jpg";
+  const filename = `${randomUUID()}.${ext}`;
+  const buffer = Buffer.from(base64Data, "base64");
+  fs.writeFileSync(path.join(UPLOAD_DIR, filename), buffer);
+  return filename;
+}
+
+async function saveRemoteImage(url: string): Promise<string> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch image: ${res.status} ${res.statusText}`);
+  const contentType = res.headers.get("content-type") ?? "image/jpeg";
+  const ext = contentType.includes("png") ? "png" : contentType.includes("gif") ? "gif" : contentType.includes("webp") ? "webp" : "jpg";
+  const filename = `${randomUUID()}.${ext}`;
+  const buffer = Buffer.from(await res.arrayBuffer());
+  fs.writeFileSync(path.join(UPLOAD_DIR, filename), buffer);
+  return filename;
+}
+
+async function generateWithPollinations(prompt: string): Promise<{ filename: string }> {
+  const encoded = encodeURIComponent(prompt.slice(0, 200));
+  const url = `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=1024&nologo=true&seed=${Date.now()}`;
+  const filename = await saveRemoteImage(url);
+  return { filename };
+}
+
+async function generateWithHuggingFace(prompt: string, model: string): Promise<{ filename: string }> {
   const apiKey = process.env.HUGGING_FACE_API_KEY;
-  const hfRes = await fetch(
-    `https://api-inference.huggingface.co/models/${model}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
-      },
-      body: JSON.stringify({
-        inputs: prompt,
-        parameters: { num_inference_steps: 20, guidance_scale: 7.5 },
-      }),
-    }
-  );
+  const hfRes = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+    },
+    body: JSON.stringify({ inputs: prompt, parameters: { num_inference_steps: 20, guidance_scale: 7.5 } }),
+  });
 
   if (!hfRes.ok) throw new Error(`HuggingFace error: ${hfRes.status} ${hfRes.statusText}`);
-  const imageBuffer = await hfRes.arrayBuffer();
-  return `data:image/jpeg;base64,${Buffer.from(imageBuffer).toString("base64")}`;
+  const contentType = hfRes.headers.get("content-type") ?? "image/jpeg";
+  const ext = contentType.includes("png") ? "png" : "jpg";
+  const filename = `${randomUUID()}.${ext}`;
+  const buffer = Buffer.from(await hfRes.arrayBuffer());
+  fs.writeFileSync(path.join(UPLOAD_DIR, filename), buffer);
+  return { filename };
 }
 
-async function generateWithOpenAI(prompt: string, model: string, size: string): Promise<string> {
+async function generateWithOpenAI(prompt: string, model: string, size: string): Promise<{ filename: string }> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
 
@@ -49,10 +85,12 @@ async function generateWithOpenAI(prompt: string, model: string, size: string): 
   if (!res.ok || data.error) throw new Error(data.error?.message ?? "OpenAI API error");
   const url = data.data?.[0]?.url;
   if (!url) throw new Error("No image URL in OpenAI response");
-  return url;
+
+  const filename = await saveRemoteImage(url);
+  return { filename };
 }
 
-async function generateWithGemini(prompt: string, model: string): Promise<string> {
+async function generateWithGemini(prompt: string, model: string): Promise<{ filename: string }> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY is not configured");
 
@@ -78,7 +116,8 @@ async function generateWithGemini(prompt: string, model: string): Promise<string
   const inlineData = data.candidates?.[0]?.content?.parts?.find((p) => p.inlineData)?.inlineData;
   if (!inlineData) throw new Error("No image data in Gemini response");
 
-  return `data:${inlineData.mimeType};base64,${inlineData.data}`;
+  const filename = saveBase64Image(inlineData.data, inlineData.mimeType);
+  return { filename };
 }
 
 router.post("/images/generate", async (req, res): Promise<void> => {
@@ -91,39 +130,44 @@ router.post("/images/generate", async (req, res): Promise<void> => {
   const { prompt, style, provider = "pollinations", model } = parsed.data;
   const fullPrompt = style ? `${prompt}, ${style} style` : prompt;
 
-  try {
-    let imageUrl: string;
-
+  const tryGenerate = async (): Promise<{ filename: string; usedProvider: string }> => {
     switch (provider as Provider) {
       case "huggingface": {
-        const hfModel = model ?? "stabilityai/stable-diffusion-xl-base-1.0";
-        imageUrl = await generateWithHuggingFace(fullPrompt, hfModel);
-        break;
+        const result = await generateWithHuggingFace(fullPrompt, model ?? "stabilityai/stable-diffusion-xl-base-1.0");
+        return { ...result, usedProvider: "huggingface" };
       }
       case "openai": {
-        const oaiModel = model ?? "dall-e-3";
-        const size = oaiModel === "dall-e-3" ? "1024x1024" : "1024x1024";
-        imageUrl = await generateWithOpenAI(fullPrompt, oaiModel, size);
-        break;
+        const result = await generateWithOpenAI(fullPrompt, model ?? "dall-e-3", "1024x1024");
+        return { ...result, usedProvider: "openai" };
       }
       case "gemini": {
-        const geminiModel = model ?? "gemini-2.0-flash-preview-image-generation";
-        imageUrl = await generateWithGemini(fullPrompt, geminiModel);
-        break;
+        const result = await generateWithGemini(fullPrompt, model ?? "gemini-2.0-flash-preview-image-generation");
+        return { ...result, usedProvider: "gemini" };
       }
       case "pollinations":
       default: {
-        imageUrl = await generateWithPollinations(fullPrompt);
-        break;
+        const result = await generateWithPollinations(fullPrompt);
+        return { ...result, usedProvider: "pollinations" };
       }
     }
+  };
 
-    res.json({ imageUrl, prompt: fullPrompt, provider });
+  try {
+    const { filename, usedProvider } = await tryGenerate();
+    const imageUrl = getPublicUrl(req, filename);
+    req.log.info({ filename, provider: usedProvider }, "AI image generated and saved");
+    res.json({ imageUrl, prompt: fullPrompt, provider: usedProvider });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Generation failed";
     req.log.warn({ err, provider }, "AI image generation failed, falling back to Pollinations");
-    const fallbackUrl = await generateWithPollinations(fullPrompt);
-    res.json({ imageUrl: fallbackUrl, prompt: fullPrompt, provider: "pollinations", warning: msg });
+    try {
+      const { filename } = await generateWithPollinations(fullPrompt);
+      const imageUrl = getPublicUrl(req, filename);
+      res.json({ imageUrl, prompt: fullPrompt, provider: "pollinations", warning: msg });
+    } catch (fallbackErr) {
+      const fallbackMsg = fallbackErr instanceof Error ? fallbackErr.message : "Fallback also failed";
+      res.status(502).json({ error: `${msg}; fallback failed: ${fallbackMsg}` });
+    }
   }
 });
 
