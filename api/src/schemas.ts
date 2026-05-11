@@ -35,6 +35,7 @@ export const CreatePostBody = zod.object({
   postType: zod.enum(["text", "image", "video"]).optional(),
   caption: zod.string(),
   imageUrl: zod.string().nullish(),
+  mediaPrompt: zod.string().nullish(),
   audioUrl: zod.string().nullish(),
   scheduledAt: zod.string().nullish(),
 });

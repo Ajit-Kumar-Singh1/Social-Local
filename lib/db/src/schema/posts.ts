@@ -8,6 +8,7 @@ export const postsTable = pgTable("posts", {
   postType: text("post_type").$type<"text" | "image" | "video">().default("image"),
   caption: text("caption").notNull(),
   imageUrl: text("image_url"),
+  mediaPrompt: text("media_prompt"),
   audioUrl: text("audio_url"),
   status: text("status").$type<"draft" | "scheduled" | "published" | "failed">().default("draft").notNull(),
   scheduledAt: timestamp("scheduled_at"),

@@ -81,6 +81,12 @@ export const CreatePostBody = zod.object({
   postType: zod.enum(["text", "image", "video"]).optional(),
   caption: zod.string(),
   imageUrl: zod.string().nullish(),
+  mediaPrompt: zod
+    .string()
+    .nullish()
+    .describe(
+      "AI prompt — if set and imageUrl is absent, the scheduler generates the image at publish time",
+    ),
   audioUrl: zod.string().nullish(),
   scheduledAt: zod.coerce.date().nullish(),
 });

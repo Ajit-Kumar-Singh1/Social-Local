@@ -63,7 +63,7 @@ router.post("/posts", async (req, res): Promise<void> => {
     return;
   }
 
-  const { pageId, title, postType, caption, imageUrl, audioUrl, scheduledAt } = parsed.data;
+  const { pageId, title, postType, caption, imageUrl, mediaPrompt, audioUrl, scheduledAt } = parsed.data;
   const status = scheduledAt ? "scheduled" : "draft";
 
   const [post] = await db
@@ -74,6 +74,7 @@ router.post("/posts", async (req, res): Promise<void> => {
       postType: postType ?? "image",
       caption,
       imageUrl: imageUrl ?? null,
+      mediaPrompt: mediaPrompt ?? null,
       audioUrl: audioUrl ?? null,
       status,
       scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
@@ -97,6 +98,7 @@ const BulkCreateSchema = z.object({
       postType: z.enum(["text", "image", "video"]).optional(),
       caption: z.string().min(1),
       imageUrl: z.string().optional().nullable(),
+      mediaPrompt: z.string().optional().nullable(),
       audioUrl: z.string().optional().nullable(),
       scheduledAt: z.string().optional().nullable(),
     })
@@ -121,6 +123,7 @@ router.post("/posts/bulk", async (req, res): Promise<void> => {
         postType: p.postType ?? "image",
         caption: p.caption,
         imageUrl: p.imageUrl ?? null,
+        mediaPrompt: p.mediaPrompt ?? null,
         audioUrl: p.audioUrl ?? null,
         status,
         scheduledAt: p.scheduledAt ? new Date(p.scheduledAt) : null,

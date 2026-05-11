@@ -89,6 +89,11 @@ export interface CreatePostBody {
   caption: string;
   /** @nullable */
   imageUrl?: string | null;
+  /**
+   * AI prompt — if set and imageUrl is absent, the scheduler generates the image at publish time
+   * @nullable
+   */
+  mediaPrompt?: string | null;
   /** @nullable */
   audioUrl?: string | null;
   /** @nullable */

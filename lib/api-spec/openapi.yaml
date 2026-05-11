@@ -424,6 +424,9 @@ components:
           type: string
         imageUrl:
           type: ["string", "null"]
+        mediaPrompt:
+          type: ["string", "null"]
+          description: "AI prompt — if set and imageUrl is absent, the scheduler generates the image at publish time"
         audioUrl:
           type: ["string", "null"]
         scheduledAt:

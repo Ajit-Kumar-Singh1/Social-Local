@@ -178,40 +178,18 @@ export function PostNew() {
     if (videoInputRef.current) videoInputRef.current.value = "";
   };
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    let mediaUrl = values.postType === "video" ? values.videoUrl : values.imageUrl;
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    const mediaUrl = values.postType === "video" ? values.videoUrl : values.imageUrl;
 
-    // If image/video post has no media but a prompt is set, auto-generate the image first
-    if (values.postType !== "text" && !mediaUrl) {
-      if (mediaPrompt.trim()) {
-        toast({ title: "Generating AI image…", description: "Please wait while your image is created." });
-        try {
-          const genRes = await fetch("/api/images/generate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ prompt: mediaPrompt, style: imageStyle, provider: aiProvider, model: aiModel || undefined }),
-          });
-          const genData = await genRes.json() as { imageUrl?: string; error?: string };
-          if (!genRes.ok || !genData.imageUrl) throw new Error(genData.error ?? "Generation failed");
-          mediaUrl = genData.imageUrl;
-          form.setValue("imageUrl", genData.imageUrl);
-          toast({ title: "Image generated!", description: "Proceeding to create the post." });
-        } catch (err) {
-          toast({
-            title: "Image generation failed",
-            description: err instanceof Error ? err.message : "Could not generate image. Try again or upload one manually.",
-            variant: "destructive",
-          });
-          return;
-        }
-      } else {
-        toast({
-          title: "Media required",
-          description: "Please generate, upload, or enter a URL for the image/video before saving.",
-          variant: "destructive",
-        });
-        return;
-      }
+    // Require media OR a prompt for image/video posts
+    // (if a prompt is provided with no image, the scheduler generates the image at publish time)
+    if (values.postType !== "text" && !mediaUrl && !mediaPrompt.trim()) {
+      toast({
+        title: "Media or AI prompt required",
+        description: "Upload/link an image or video, or add an AI prompt — the image will be generated when the post publishes.",
+        variant: "destructive",
+      });
+      return;
     }
 
     createPost.mutate(
@@ -222,6 +200,7 @@ export function PostNew() {
           postType: values.postType,
           caption: values.caption,
           imageUrl: mediaUrl || null,
+          mediaPrompt: values.postType !== "text" ? (mediaPrompt.trim() || null) : null,
           audioUrl: null,
           scheduledAt: values.scheduledAt ? values.scheduledAt.toISOString() : null,
         },

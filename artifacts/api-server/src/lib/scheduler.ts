@@ -2,6 +2,7 @@ import { db, postsTable, facebookPagesTable } from "@workspace/db";
 import { eq, lte, and } from "drizzle-orm";
 import { logger } from "./logger";
 import { cleanupUploadedFile } from "./cleanupUpload";
+import { generateAndSaveImage } from "./generateImage";
 
 async function publishToFacebook(
   page: { pageId: string; accessToken: string },
@@ -45,7 +46,7 @@ async function publishScheduledPosts() {
 
   logger.info({ count: duePosts.length }, "Publishing scheduled posts");
 
-  for (const post of duePosts) {
+  for (let post of duePosts) {
     const [page] = await db
       .select()
       .from(facebookPagesTable)
@@ -59,17 +60,35 @@ async function publishScheduledPosts() {
       continue;
     }
 
-    // Guard: never publish an image/video post without media — mark failed instead
+    // If image/video post has no imageUrl yet, try generating from mediaPrompt
     if (post.postType !== "text" && !post.imageUrl) {
-      await db
-        .update(postsTable)
-        .set({
-          status: "failed",
-          errorMessage: `Post type '${post.postType ?? "image"}' requires media, but no image/video URL was saved. Generate or upload the media before scheduling.`,
-        })
-        .where(eq(postsTable.id, post.id));
-      logger.warn({ postId: post.id, postType: post.postType }, "Skipping scheduled post — no media URL provided");
-      continue;
+      if (post.mediaPrompt) {
+        logger.info({ postId: post.id }, "Generating AI image for scheduled post");
+        try {
+          const imageUrl = await generateAndSaveImage(post.mediaPrompt);
+          await db.update(postsTable).set({ imageUrl }).where(eq(postsTable.id, post.id));
+          post = { ...post, imageUrl };
+          logger.info({ postId: post.id, imageUrl }, "AI image generated and saved for scheduled post");
+        } catch (genErr) {
+          const msg = genErr instanceof Error ? genErr.message : "AI image generation failed";
+          await db
+            .update(postsTable)
+            .set({ status: "failed", errorMessage: `AI image generation failed: ${msg}` })
+            .where(eq(postsTable.id, post.id));
+          logger.error({ err: genErr, postId: post.id }, "Failed to generate AI image for scheduled post");
+          continue;
+        }
+      } else {
+        await db
+          .update(postsTable)
+          .set({
+            status: "failed",
+            errorMessage: "This image/video post has no media and no AI prompt. Please upload an image or set an AI prompt.",
+          })
+          .where(eq(postsTable.id, post.id));
+        logger.warn({ postId: post.id }, "Skipping scheduled post — no imageUrl and no mediaPrompt");
+        continue;
+      }
     }
 
     try {
